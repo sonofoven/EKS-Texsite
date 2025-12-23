@@ -1,3 +1,0 @@
-#!/bin/sh
-
-pandoc $1 -f latex -t html5 -s -o "../webSrc/index.html" --metadata charset=utf-8

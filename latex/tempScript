@@ -1,0 +1,3 @@
+#!/bin/sh
+
+pandoc $1 -f latex -t html5 -s -o "../nginx/html/index.html" --metadata charset=utf-8
