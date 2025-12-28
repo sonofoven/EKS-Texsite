@@ -33,7 +33,7 @@ data "aws_iam_policy_document" "cluster_assume_role"{
 resource "aws_iam_role" "cluster"{
   name = var.cluster_role_name
   description = "Enables eks cluster to be in auto mode"
-  assume_role_policy = data.aws_iam_policy_document.cluster_assume_role
+  assume_role_policy = data.aws_iam_policy_document.cluster_assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_attachments" {
@@ -63,9 +63,9 @@ data "aws_iam_policy_document" "worker_node_assume_role"{
 }
 
 resource "aws_iam_role" "worker_node"{
-  name = var.cluster_role_name
+  name = var.cluster_node_role_name
   description = "Enables ec2 node to be part of eks cluster & use ecr"
-  assume_role_policy = data.aws_iam_policy_document.worker_node_assume_role
+  assume_role_policy = data.aws_iam_policy_document.worker_node_assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "worker_node_attachments" {
@@ -108,12 +108,6 @@ resource "aws_subnet" "az1" {
 resource "aws_subnet" "az2" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "${var.aws_region}b"
-}
-
-resource "aws_subnet" "az3" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.3.0/24"
   availability_zone = "${var.aws_region}c"
 }
 
@@ -127,7 +121,7 @@ resource "aws_eks_cluster" "nginx-texsite" {
   }
 
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.31"
+  version  = "1.32"
 
   bootstrap_self_managed_addons = false
 
@@ -156,7 +150,6 @@ resource "aws_eks_cluster" "nginx-texsite" {
     subnet_ids = [
       aws_subnet.az1.id,
       aws_subnet.az2.id,
-      aws_subnet.az3.id,
     ]
   }
 
@@ -164,7 +157,5 @@ resource "aws_eks_cluster" "nginx-texsite" {
   depends_on = [
     aws_iam_role_policy_attachment.cluster_attachments,
     aws_iam_role_policy_attachment.worker_node_attachments,
-
   ]
 }
-

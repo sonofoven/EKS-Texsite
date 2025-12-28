@@ -7,19 +7,19 @@ variable "aws_region" {
 variable "eks_cluster_name" {
   description = "Name of the lambda function"
   type        = string
-  default     = "KubeSiteCluster"
+  default     = "TexSiteCluster"
 }
 
 variable "cluster_role_name" {
   description = "Name of the role that lambda needs"
   type        = string
-  default = "AmazonEKSClusterRole"
+  default = "AmazonEKSTexSiteCLusterRole"
 }
 
 variable "cluster_node_role_name" {
   description = "Name of the role that lambda needs"
   type        = string
-  default = "AmazonEKSNodeRole"
+  default = "AmazonEKSTexSiteNodeRole"
 }
 
 variable "ecr_repo_name" {
