@@ -15,6 +15,12 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_caller_identity" "current" {}
+
+locals {
+  account_id = data.aws_caller_identity.current.id
+}
+
 
 ### Provision all resources for EKS ###
 
@@ -80,7 +86,6 @@ resource "aws_iam_role_policy_attachment" "worker_node_attachments" {
 }
 
 ## Create ECR
-
 resource "aws_ecr_repository" "nginx-texsite" {
   name                 = var.ecr_repo_name
   image_tag_mutability = "MUTABLE"
@@ -91,8 +96,7 @@ resource "aws_ecr_repository" "nginx-texsite" {
   }
 }
 
-## Create necessary networking environment for eks
-
+# Create subnets
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -111,8 +115,56 @@ resource "aws_subnet" "az2" {
   availability_zone = "${var.aws_region}c"
 }
 
-## Create EKS 
 
+## Create a role for the user to assume to access eks
+resource "aws_iam_role" "eks_access" {
+  name = var.eks_access_role_name
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:aws:iam::${local.account_id}:root"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+## Create an access entry for devs to access
+resource "aws_eks_access_entry" "eks_access" {
+  cluster_name  = var.eks_cluster_name
+  principal_arn = aws_iam_role.eks_access.arn
+  depends_on = [ aws_eks_cluster.nginx-texsite ]
+}
+
+
+## Allow devs to modify the namespaces of 
+resource "aws_eks_access_policy_association" "eks_access_edit" {
+  cluster_name  = var.eks_cluster_name
+  principal_arn = aws_iam_role.eks_access.arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope { type = "cluster" }
+
+  depends_on = [ aws_eks_access_entry.eks_access ]
+}
+
+##
+resource "aws_eks_access_policy_association" "eks_access_view" {
+  cluster_name  = var.eks_cluster_name
+  principal_arn = aws_iam_role.eks_access.arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+
+  access_scope {
+    type       = "namespace"
+    namespaces = ["kube-system"]
+  }
+  depends_on = [ aws_eks_access_entry.eks_access ]
+}
+
+## Create EKS 
 resource "aws_eks_cluster" "nginx-texsite" {
   name = var.eks_cluster_name
 
