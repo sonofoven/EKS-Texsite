@@ -96,6 +96,8 @@ resource "aws_ecr_repository" "nginx-texsite" {
   }
 }
 
+## Create networking environment
+
 # Create subnets
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
@@ -115,6 +117,67 @@ resource "aws_subnet" "az2" {
   availability_zone = "${var.aws_region}c"
 }
 
+# Create public subnet
+resource "aws_subnet" "public_az1" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.10.0/24"
+  availability_zone       = "${var.aws_region}a"
+  map_public_ip_on_launch = true
+}
+
+# Internet gateway for pub subnets
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+}
+
+# Elastic ip for NAT gateway
+resource "aws_eip" "nat" {
+  domain = "vpc"
+}
+
+# Connect nat gateway to pub subnet
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public_az1.id
+  depends_on    = [aws_internet_gateway.igw]
+}
+
+# Pub routing table
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+}
+
+# Connect pub routing table to pub subnet
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public_az1.id
+  route_table_id = aws_route_table.public.id
+}
+
+# Priv routing table
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main.id
+  }
+}
+
+# Connect priv routing table to priv subnet
+resource "aws_route_table_association" "az1" {
+  subnet_id      = aws_subnet.az1.id
+  route_table_id = aws_route_table.private.id
+}
+
+# Connect priv routing table to priv subnet
+resource "aws_route_table_association" "az2" {
+  subnet_id      = aws_subnet.az2.id
+  route_table_id = aws_route_table.private.id
+}
+
 
 ## Create a role for the user to assume to access eks
 resource "aws_iam_role" "eks_access" {
@@ -132,7 +195,10 @@ resource "aws_iam_role" "eks_access" {
   })
 }
 
-## Create an access entry for devs to access
+## Create an access entry & policy associations for devs to access eks
+
+
+# Access entry
 resource "aws_eks_access_entry" "eks_access" {
   cluster_name  = var.eks_cluster_name
   principal_arn = aws_iam_role.eks_access.arn
@@ -140,7 +206,7 @@ resource "aws_eks_access_entry" "eks_access" {
 }
 
 
-## Allow devs to modify the namespaces of 
+# Allow devs to modify the cluster
 resource "aws_eks_access_policy_association" "eks_access_edit" {
   cluster_name  = var.eks_cluster_name
   principal_arn = aws_iam_role.eks_access.arn
@@ -151,7 +217,7 @@ resource "aws_eks_access_policy_association" "eks_access_edit" {
   depends_on = [ aws_eks_access_entry.eks_access ]
 }
 
-##
+# Allow devs to view kube info
 resource "aws_eks_access_policy_association" "eks_access_view" {
   cluster_name  = var.eks_cluster_name
   principal_arn = aws_iam_role.eks_access.arn
