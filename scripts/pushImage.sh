@@ -13,9 +13,11 @@ aws ecr get-login-password --region ${AWS_REGION} \
       --password-stdin \
       "$ECR_REGISTRY_ID"
 
+TIME_TAG=$(date -u + "%Y%m%d-%H%M%S")
+
 # Build
 docker buildx build --platform linux/amd64 \
   --provenance=false \
-  -t "${ECR_REPOSITORY_URL}:latest" \
+  -t "${ECR_REPOSITORY_URL}:${TIME_TAG}" \
   --push \
   .
