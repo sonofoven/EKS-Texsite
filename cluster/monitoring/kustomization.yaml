@@ -1,1 +1,3 @@
-resources: []
+resources:
+  - prom-helm-repos.yml
+  - kube-prom-stack.yml

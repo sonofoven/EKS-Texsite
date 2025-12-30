@@ -41,7 +41,8 @@ flux bootstrap github \
   --repository=$GITHUB_REPO \
   --branch=main \
   --path=./cluster/flux-system \
-  --personal
+  --personal \
+  --components-extra=image-reflector-controller,image-automation-controller
 
 # Store bootstrap gh variables
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"
@@ -54,31 +55,3 @@ gh variable set ECR_REPOSITORY --body "$ECR_REPOSITORY_URL"
 gh variable set AWS_REGION --body "$AWS_REGION"
 gh variable set EKS_CLUSTER_NAME --body "$EKS_CLUSTER_NAME"
 gh variable set EKS_ROLE_ARN --body "$EKS_ROLE_ARN"
-
-bootstrap:
-    
-    # Infra phase
-    terraform apply:
-            create ecr repo (this time w/ a lifecycle)
-            create policies
-            create role
-            create eks w/ role
-    grab output, save as gh variable
-
-
-    # Append a
-    Copy config creds to local machine to access via kubectl
-    install fluxCD
-    
-    apply manifests w/ flux automatically reading repo for updates
-
-
-CI: ON LATEX FILE CHANGE ONLY
-    compile latex -> html
-    create dockerfile
-    push dockerfile up to ecr
-
-    # No need for a CI on manifests cuz thats what flux is for
-
-gitops:
-    updates git to latest image from ecr to push into the cluster
