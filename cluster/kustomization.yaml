@@ -1,4 +1,3 @@
-# Specify directories containing manifests
 resources:
   - infra
   - apps

@@ -30,7 +30,18 @@ aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME --role-a
 
 echo "\n<< INSTALLING FLUX >>\n"
 
+GITHUB_INFO=$(gh repo view --json owner,name -q '.owner.login + "/" + .name')
+GITHUB_OWNER=$(echo "$GITHUB_INFO" | cut -d '/' -f1)
+GITHUB_REPO=$(echo "$GITHUB_INFO" | cut -d '/' -f2)
 
+GITHUB_TOKEN=$(gh auth token) \
+flux bootstrap github \
+  --token-auth \
+  --owner=$GITHUB_OWNER \
+  --repository=$GITHUB_REPO \
+  --branch=main \
+  --path=./cluster/flux-system \
+  --personal
 
 # Store bootstrap gh variables
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"
