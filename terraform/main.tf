@@ -10,6 +10,10 @@ terraform {
       source = "hashicorp/tls"
       version = "~> 4.0"
     }
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.0"
+    }
   }
 
   required_version = ">= 1.2"
@@ -114,20 +118,45 @@ resource "aws_subnet" "az1" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "${var.aws_region}a"
+  tags = {
+      "kubernetes.io/role/internal-elb"               = "1"
+      "kubernetes.io/cluster/${var.eks_cluster_name}" = "owned"
+  }
 }
 
 resource "aws_subnet" "az2" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "${var.aws_region}c"
+  tags = {
+      "kubernetes.io/role/internal-elb"               = "1"
+      "kubernetes.io/cluster/${var.eks_cluster_name}" = "owned"
+  }
 }
 
-# Create public subnet
+# Create public subnets
 resource "aws_subnet" "public_az1" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.10.0/24"
   availability_zone       = "${var.aws_region}a"
+
   map_public_ip_on_launch = true
+  tags = {
+    "kubernetes.io/role/elb"                        = "1"
+    "kubernetes.io/cluster/${var.eks_cluster_name}" = "owned"
+  }
+}
+
+resource "aws_subnet" "public_az2" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.20.0/24"
+  availability_zone       = "${var.aws_region}c"
+
+  map_public_ip_on_launch = true
+  tags = {
+    "kubernetes.io/role/elb"                        = "1"
+    "kubernetes.io/cluster/${var.eks_cluster_name}" = "owned"
+  }
 }
 
 # Internet gateway for pub subnets
@@ -157,8 +186,13 @@ resource "aws_route_table" "public" {
 }
 
 # Connect pub routing table to pub subnet
-resource "aws_route_table_association" "public" {
+resource "aws_route_table_association" "public_az1" {
   subnet_id      = aws_subnet.public_az1.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table_association" "public_az2" {
+  subnet_id      = aws_subnet.public_az2.id
   route_table_id = aws_route_table.public.id
 }
 
@@ -358,8 +392,52 @@ resource "aws_iam_role_policy_attachment" "attach_ecr" {
 
 # Create role
 resource "aws_iam_role" "repo_monitor" {
-  name               = "FluxImageReflectorRole"
+  name               = "image-reflector-role"
   assume_role_policy = data.aws_iam_policy_document.repo_monitor_assume_role.json
 }
 
 
+
+
+# Get policy json to make ALB's
+data "http" "lbc_iam_policy" {
+  url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json"
+}
+
+# Make alb policy
+resource "aws_iam_policy" "lbc_policy" {
+  name        = "AWSLoadBalancerControllerIAMPolicy"
+  description = "Permissions for EKS Load Balancer Controller"
+  policy      = data.http.lbc_iam_policy.response_body
+}
+
+# Create the trust policy, trusting only the service
+data "aws_iam_policy_document" "lbc_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    effect  = "Allow"
+
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(aws_iam_openid_connect_provider.this.url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
+    }
+
+    principals {
+      identifiers = [aws_iam_openid_connect_provider.this.arn]
+      type        = "Federated"
+    }
+  }
+}
+
+# Create the role
+resource "aws_iam_role" "lbc_role" {
+  name               = "AmazonEKSLoadBalancerControllerRole"
+  assume_role_policy = data.aws_iam_policy_document.lbc_assume_role_policy.json
+}
+
+# Connect policy to the role
+resource "aws_iam_role_policy_attachment" "lbc_attach" {
+  role       = aws_iam_role.lbc_role.name
+  policy_arn = aws_iam_policy.lbc_policy.arn
+}
