@@ -3,4 +3,5 @@ resources:
   - nginx-image-policy.yml
   - nginx-repo.yml
   - nginx-manifest-update.yml
+  - nginx-hpa.yml
 
