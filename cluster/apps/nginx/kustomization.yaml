@@ -1,1 +1,6 @@
-resources: []
+resources:
+  - nginx-deployment.yml
+  - nginx-image-policy.yml
+  - nginx-repo.yml
+  - nginx-manifest-update.yml
+
