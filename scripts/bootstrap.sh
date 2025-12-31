@@ -63,7 +63,8 @@ flux bootstrap github \
   --components-extra=image-reflector-controller,image-automation-controller
 
 kubectl -n flux-system annotate serviceaccount image-reflector-controller \
-        eks.amazonaws.com/role-arn=$(REPO_MONITOR_ROLE_ARN)
+        eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
+        --overwrite
 kubectl -n flux-system rollout restart deployment image-reflector-controller
 
 cd "$REPO_ROOT/cluster/apps/nginx/templates"
