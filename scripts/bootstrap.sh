@@ -42,7 +42,7 @@ flux bootstrap github \
   --owner=$GITHUB_OWNER \
   --repository=$GITHUB_REPO \
   --branch=main \
-  --path=cluster/flux-system \
+  --path=cluster \
   --personal \
   --components-extra=image-reflector-controller,image-automation-controller
 
