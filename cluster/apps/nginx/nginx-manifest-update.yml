@@ -13,8 +13,9 @@ spec:
       ref:
         branch: main
     commit:
-      name: flux-bot
-      email: flux-bot@users.noreply.github.com
+      author:
+        name: flux-bot
+        email: flux-bot@users.noreply.github.com
       messageTemplate: "Update manifest describing nginx-texsite version"
     push:
       branch: main
