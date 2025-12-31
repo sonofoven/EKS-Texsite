@@ -22,7 +22,23 @@ cd "$REPO_ROOT/scripts"
 
 # Push initial image to ecr
 echo "\n<< BUILDING AND PUSHING IMAGE >>\n"
-./pushImage.sh $ECR_REPOSITORY_URL $AWS_REGION
+
+cd "$REPO_ROOT/nginx"
+
+# Login to ECR registry
+aws ecr get-login-password --region ${AWS_REGION} \
+  | docker login \
+      --username AWS \
+      --password-stdin \
+      "$ECR_REGISTRY_ID"
+
+# Build
+docker buildx build --platform linux/amd64 \
+  --provenance=false \
+  -t "${ECR_REPOSITORY_URL}:00000000-000000" \
+  --push \
+  .
+
 
 cd "$REPO_ROOT"
 
@@ -50,13 +66,13 @@ kubectl -n flux-system annotate serviceaccount image-reflector-controller \
         eks.amazonaws.com/role-arn=$(REPO_MONITOR_ROLE_ARN)
 kubectl -n flux-system rollout restart deployment image-reflector-controller
 
-cd "$REPO_ROOT/cluster/apps"
+cd "$REPO_ROOT/cluster/apps/nginx/templates"
 
 # Generate ecr source repository for use with flux image reflector
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
-envsubst < nginx-repo.yml.tmpl > nginx-repo.yml
+envsubst < nginx-repo.yml.tmpl > ../nginx-repo.yml
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
-envsubst < nginx-deployment.yml.tmpl > nginx-deployment.yml
+envsubst < nginx-deployment.yml.tmpl > ../nginx-deployment.yml
 
 
 # Store bootstrap gh variables

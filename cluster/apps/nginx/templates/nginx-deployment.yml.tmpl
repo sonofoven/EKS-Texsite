@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: ${ECR_REPOSITORY_URL}:latest # {"$imagepolicy": "flux-system:nginx-texsite"}
+          image: ${ECR_REPOSITORY_URL}:00000000-000000 # {"$imagepolicy": "flux-system:nginx-texsite"}
           ports:
             - containerPort: 80
             - containerPort: 8080
