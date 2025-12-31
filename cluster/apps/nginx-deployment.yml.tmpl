@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-texsite
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-texsite
+  template:
+    metadata:
+      labels:
+        app: nginx-texsite
+    spec:
+      containers:
+        - name: nginx
+          image: ${ECR_REPOSITORY_URL}:latest # {"$imagepolicy": "flux-system:nginx-texsite"}
+          ports:
+            - containerPort: 80
+            - containerPort: 8080

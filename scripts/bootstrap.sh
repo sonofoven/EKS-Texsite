@@ -13,6 +13,7 @@ ECR_REPOSITORY_URL=$(terraform output -raw ecr_repository_url)
 AWS_REGION=$(terraform output -raw aws_region)
 EKS_CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
 EKS_ROLE_ARN=$(terraform output -raw eks_role_arn)
+REPO_MONITOR_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
 
 # Building latex file
 echo "\n<< CONVERTING LATEX RESUME TO HTML5 >>\n"
@@ -43,6 +44,19 @@ flux bootstrap github \
   --path=./cluster/flux-system \
   --personal \
   --components-extra=image-reflector-controller,image-automation-controller
+
+kubectl -n flux-system annotate serviceaccount image-reflector-controller \
+        eks.amazonaws.com/role-arn=$(REPO_MONITOR_ROLE_ARN)
+kubectl -n flux-system rollout restart deployment image-reflector-controller
+
+cd cluster/apps
+
+# Generate ecr source repository for use with flux image reflector
+ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
+envsubst < nginx-repo.yml.tmpl > nginx-repo.yml
+ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
+envsubst < nginx-deployment.yml.tmpl > nginx-deployment.yml
+
 
 # Store bootstrap gh variables
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"

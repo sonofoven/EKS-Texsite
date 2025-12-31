@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.92"
     }
+    tls = {
+      source = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
 
   required_version = ">= 1.2"
@@ -25,20 +29,20 @@ locals {
 ### Provision all resources for EKS ###
 
 ## Define cluster role and attach necessary roles
-data "aws_iam_policy_document" "cluster_assume_role"{
+data "aws_iam_policy_document" "cluster_assume_role" {
   statement {
     actions = ["sts:AssumeRole", "sts:TagSession"]
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["eks.amazonaws.com"]
     }
   }
 }
 
-resource "aws_iam_role" "cluster"{
-  name = var.cluster_role_name
-  description = "Enables eks cluster to be in auto mode"
+resource "aws_iam_role" "cluster" {
+  name               = var.cluster_role_name
+  description        = "Enables eks cluster to be in auto mode"
   assume_role_policy = data.aws_iam_policy_document.cluster_assume_role.json
 }
 
@@ -55,22 +59,21 @@ resource "aws_iam_role_policy_attachment" "cluster_attachments" {
   policy_arn = each.value
 }
 
-
 ## Define worker node role and attach necessary roles
-data "aws_iam_policy_document" "worker_node_assume_role"{
+data "aws_iam_policy_document" "worker_node_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["ec2.amazonaws.com"]
     }
   }
 }
 
-resource "aws_iam_role" "worker_node"{
-  name = var.cluster_node_role_name
-  description = "Enables ec2 node to be part of eks cluster & use ecr"
+resource "aws_iam_role" "worker_node" {
+  name               = var.cluster_node_role_name
+  description        = "Enables ec2 node to be part of eks cluster & use ecr"
   assume_role_policy = data.aws_iam_policy_document.worker_node_assume_role.json
 }
 
@@ -89,12 +92,14 @@ resource "aws_iam_role_policy_attachment" "worker_node_attachments" {
 resource "aws_ecr_repository" "nginx-texsite" {
   name                 = var.ecr_repo_name
   image_tag_mutability = "MUTABLE"
-  force_delete = true
+  force_delete         = true
 
   image_scanning_configuration {
     scan_on_push = true
   }
 }
+
+
 
 ## Create networking environment
 
@@ -197,12 +202,11 @@ resource "aws_iam_role" "eks_access" {
 
 ## Create an access entry & policy associations for devs to access eks
 
-
 # Access entry
 resource "aws_eks_access_entry" "eks_access" {
   cluster_name  = var.eks_cluster_name
   principal_arn = aws_iam_role.eks_access.arn
-  depends_on = [ aws_eks_cluster.nginx-texsite ]
+  depends_on    = [aws_eks_cluster.nginx-texsite]
 }
 
 
@@ -214,7 +218,7 @@ resource "aws_eks_access_policy_association" "eks_access_edit" {
 
   access_scope { type = "cluster" }
 
-  depends_on = [ aws_eks_access_entry.eks_access ]
+  depends_on = [aws_eks_access_entry.eks_access]
 }
 
 # Allow devs to view kube info
@@ -227,7 +231,7 @@ resource "aws_eks_access_policy_association" "eks_access_view" {
     type       = "namespace"
     namespaces = ["kube-system"]
   }
-  depends_on = [ aws_eks_access_entry.eks_access ]
+  depends_on = [aws_eks_access_entry.eks_access]
 }
 
 ## Create EKS 
@@ -277,3 +281,85 @@ resource "aws_eks_cluster" "nginx-texsite" {
     aws_iam_role_policy_attachment.worker_node_attachments,
   ]
 }
+
+## Create IRSA (IAM Role for Service Account)
+
+
+# Collect data for policy document
+data "aws_eks_cluster" "this" {
+  name = var.eks_cluster_name
+  depends_on = [aws_eks_cluster.nginx-texsite]
+}
+
+# Need a tls cert for openconnect
+data "tls_certificate" "oidc" {
+  url = data.aws_eks_cluster.this.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_openid_connect_provider" "this" {
+  url             = data.aws_eks_cluster.this.identity[0].oidc[0].issuer
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.oidc.certificates[0].sha1_fingerprint]
+}
+
+
+# Policy document to allow trust
+data "aws_iam_policy_document" "repo_monitor_assume_role" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sts:AssumeRoleWithWebIdentity"
+    ]
+
+    principals {
+      type = "Federated"
+      identifiers = [
+        aws_iam_openid_connect_provider.this.arn
+      ]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(data.aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")}:sub"
+      values = [
+        "system:serviceaccount:flux-system:image-reflector-controller"
+      ]
+    }
+  }
+}
+
+# Create policy to enable ecr reading
+resource "aws_iam_policy" "ecr_read" {
+  name = "FluxECRReadOnly"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:DescribeRepositories",
+        "ecr:DescribeImages",
+        "ecr:ListImages"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+# Attach above policy to role
+resource "aws_iam_role_policy_attachment" "attach_ecr" {
+  role       = aws_iam_role.repo_monitor.name
+  policy_arn = aws_iam_policy.ecr_read.arn
+}
+
+# Create role
+resource "aws_iam_role" "repo_monitor" {
+  name               = "FluxImageReflectorRole"
+  assume_role_policy = data.aws_iam_policy_document.repo_monitor_assume_role.json
+}
+
+

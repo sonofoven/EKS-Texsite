@@ -1,0 +1,21 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageUpdateAutomation
+metadata:
+  name: nginx-texsite
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      messageTemplate: "Update manifest describing nginx-texsite version"
+    push:
+      branch: main
+  update:
+    strategy: Setters
+    path: ./cluster

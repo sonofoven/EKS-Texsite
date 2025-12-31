@@ -1,3 +1,5 @@
 resources:
   - prom-helm-repos.yml
   - kube-prom-stack.yml
+  - metrics-helm-repo.yml
+  - metrics-server.yml
