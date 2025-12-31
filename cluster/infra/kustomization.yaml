@@ -1,1 +1,3 @@
-resources: []
+resources:
+  - alb-helm-repo.yml
+  - alb-controller.yml
