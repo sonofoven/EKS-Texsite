@@ -1,11 +1,11 @@
 #!/bin/sh
 
-cd ..
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 echo "\n<< PROVISIONING DEPENDENCIES >>\n"
 
 # Setup cluster & ecr
-cd terraform
+cd "$REPO_ROOT/terraform"
 terraform init
 terraform apply -auto-approve
 
@@ -17,13 +17,14 @@ REPO_MONITOR_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
 
 # Building latex file
 echo "\n<< CONVERTING LATEX RESUME TO HTML5 >>\n"
-cd ../scripts
+cd "$REPO_ROOT/scripts"
 ./resume2html.sh
 
 # Push initial image to ecr
 echo "\n<< BUILDING AND PUSHING IMAGE >>\n"
 ./pushImage.sh $ECR_REPOSITORY_URL $AWS_REGION
-cd ..
+
+cd "$REPO_ROOT"
 
 # Configure kubectl
 echo "\n<< UPDATING KUBECTL TO INTERACT W/ CLUSTER >>\n"
@@ -41,7 +42,7 @@ flux bootstrap github \
   --owner=$GITHUB_OWNER \
   --repository=$GITHUB_REPO \
   --branch=main \
-  --path=./cluster/flux-system \
+  --path=cluster/flux-system \
   --personal \
   --components-extra=image-reflector-controller,image-automation-controller
 
@@ -49,7 +50,7 @@ kubectl -n flux-system annotate serviceaccount image-reflector-controller \
         eks.amazonaws.com/role-arn=$(REPO_MONITOR_ROLE_ARN)
 kubectl -n flux-system rollout restart deployment image-reflector-controller
 
-cd cluster/apps
+cd "$REPO_ROOT/cluster/apps"
 
 # Generate ecr source repository for use with flux image reflector
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
