@@ -5,4 +5,4 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1h
-  url: https://aws.github.io/eks-charts 
+  url: https://aws.github.io/eks-charts

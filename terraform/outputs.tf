@@ -17,3 +17,7 @@ output "eks_role_arn" {
 output "repo_monitor_role_arn" {
   value = aws_iam_role.repo_monitor.arn
 }
+
+output "alb_role_arn" {
+  value = aws_iam_role.lbc_role.arn
+}

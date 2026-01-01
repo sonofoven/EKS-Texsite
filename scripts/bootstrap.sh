@@ -14,6 +14,7 @@ AWS_REGION=$(terraform output -raw aws_region)
 EKS_CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
 EKS_ROLE_ARN=$(terraform output -raw eks_role_arn)
 REPO_MONITOR_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
+ALB_ROLE_ARN=$(terraform output -raw alb_role_arn)
 
 # Building latex file
 echo "\n<< CONVERTING LATEX RESUME TO HTML5 >>\n"
@@ -75,6 +76,11 @@ envsubst < nginx-repo.yml.tmpl > ../nginx-repo.yml
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
 envsubst < nginx-deployment.yml.tmpl > ../nginx-deployment.yml
 
+cd "$REPO_ROOT/cluster/infra/templates"
+EKS_CLUSTER_NAME="$EKS_CLUSTER_NAME" \
+envsubst < alb-controller.yml.tmpl > ../alb-controller.yml
+ALB_ROLE_ARN="$ALB_ROLE_ARN" \
+envsubst < alb-service-acc.yml.tmpl > ../alb-service-acc.yml
 
 # Store bootstrap gh variables
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"
