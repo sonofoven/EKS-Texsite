@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: image-reflector-controller
-  namespace: flux-system
-  annotations:
-    eks.amazonaws.com/role-arn: ${REPO_MONITOR_ROLE_ARN}

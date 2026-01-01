@@ -64,10 +64,10 @@ flux bootstrap github \
   --personal \
   --components-extra=image-reflector-controller,image-automation-controller
 
-# kubectl -n flux-system annotate serviceaccount image-reflector-controller \
-#         eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
-#         --overwrite
-# kubectl -n flux-system rollout restart deployment image-reflector-controller
+kubectl -n flux-system annotate serviceaccount image-reflector-controller \
+        eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
+        --overwrite
+kubectl -n flux-system rollout restart deployment image-reflector-controller
 
 cd "$REPO_ROOT/cluster/apps/nginx/templates"
 
@@ -76,8 +76,8 @@ ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
 envsubst < nginx-repo.yml.tmpl > ../nginx-repo.yml
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
 envsubst < nginx-deployment.yml.tmpl > ../nginx-deployment.yml
-REPO_MONITOR_ROLE_ARN="$REPO_MONITOR_ROLE_ARN" \
-envsubst < nginx-image-reflect-sa.yml.tmpl > ../nginx-image-reflect-sa.yml
+# REPO_MONITOR_ROLE_ARN="$REPO_MONITOR_ROLE_ARN" \
+# envsubst < nginx-image-reflect-sa.yml.tmpl > ../nginx-image-reflect-sa.yml
 
 cd "$REPO_ROOT/cluster/infra/templates"
 EKS_CLUSTER_NAME="$EKS_CLUSTER_NAME" \
