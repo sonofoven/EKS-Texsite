@@ -4,4 +4,4 @@ metadata:
   name: image-reflector-controller
   namespace: flux-system
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::789382030074:role/AmazonEKSTexSiteNodeRole
+    eks.amazonaws.com/role-arn: arn:aws:iam::789382030074:role/image-reflector-role

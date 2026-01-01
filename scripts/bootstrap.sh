@@ -13,7 +13,6 @@ ECR_REPOSITORY_URL=$(terraform output -raw ecr_repository_url)
 AWS_REGION=$(terraform output -raw aws_region)
 EKS_CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
 EKS_ROLE_ARN=$(terraform output -raw eks_role_arn)
-EKS_WORKER_NODE_ROLE_ARN=$(terraform output -raw eks_worker_node_role_arn)
 REPO_MONITOR_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
 ALB_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
 VPC_ID=$(terraform output -raw vpc_id)
@@ -65,10 +64,10 @@ flux bootstrap github \
   --personal \
   --components-extra=image-reflector-controller,image-automation-controller
 
-kubectl -n flux-system annotate serviceaccount image-reflector-controller \
-        eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
-        --overwrite
-kubectl -n flux-system rollout restart deployment image-reflector-controller
+# kubectl -n flux-system annotate serviceaccount image-reflector-controller \
+#         eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
+#         --overwrite
+# kubectl -n flux-system rollout restart deployment image-reflector-controller
 
 cd "$REPO_ROOT/cluster/apps/nginx/templates"
 
@@ -77,7 +76,7 @@ ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
 envsubst < nginx-repo.yml.tmpl > ../nginx-repo.yml
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
 envsubst < nginx-deployment.yml.tmpl > ../nginx-deployment.yml
-EKS_WORKER_NODE_ROLE_ARN="$EKS_WORKER_NODE_ROLE_ARN" \
+REPO_MONITOR_ROLE_ARN="$REPO_MONITOR_ROLE_ARN" \
 envsubst < nginx-image-reflect-sa.yml.tmpl > ../nginx-image-reflect-sa.yml
 
 cd "$REPO_ROOT/cluster/infra/templates"
