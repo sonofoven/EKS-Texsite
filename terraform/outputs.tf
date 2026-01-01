@@ -21,3 +21,7 @@ output "repo_monitor_role_arn" {
 output "alb_role_arn" {
   value = aws_iam_role.lbc_role.arn
 }
+
+output "vpc_id" {
+  value = aws_vpc.main.id
+}

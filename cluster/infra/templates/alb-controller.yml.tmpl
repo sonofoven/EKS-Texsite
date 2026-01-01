@@ -16,6 +16,8 @@ spec:
   targetNamespace: kube-system
   values:
     clusterName: ${EKS_CLUSTER_NAME}
+    region: ${AWS_REGION}
+    vpcId: ${VPC_ID}
     serviceAccount:
       create: false
       name: aws-load-balancer-controller

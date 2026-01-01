@@ -14,7 +14,7 @@ AWS_REGION=$(terraform output -raw aws_region)
 EKS_CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
 EKS_ROLE_ARN=$(terraform output -raw eks_role_arn)
 REPO_MONITOR_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
-ALB_ROLE_ARN=$(terraform output -raw alb_role_arn)
+VPC_ID=$(terraform output -raw vpc_id)
 
 # Building latex file
 echo "\n<< CONVERTING LATEX RESUME TO HTML5 >>\n"
@@ -78,6 +78,8 @@ envsubst < nginx-deployment.yml.tmpl > ../nginx-deployment.yml
 
 cd "$REPO_ROOT/cluster/infra/templates"
 EKS_CLUSTER_NAME="$EKS_CLUSTER_NAME" \
+AWS_REGION="$AWS_REGION" \
+VPC_ID="$VPC_ID" \
 envsubst < alb-controller.yml.tmpl > ../alb-controller.yml
 ALB_ROLE_ARN="$ALB_ROLE_ARN" \
 envsubst < alb-service-acc.yml.tmpl > ../alb-service-acc.yml

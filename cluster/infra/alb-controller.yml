@@ -16,6 +16,8 @@ spec:
   targetNamespace: kube-system
   values:
     clusterName: TexSiteCluster
+    region: us-west-1
+    vpcId: vpc-0317e097b0335f9eb
     serviceAccount:
       create: false
       name: aws-load-balancer-controller
