@@ -14,6 +14,7 @@ AWS_REGION=$(terraform output -raw aws_region)
 EKS_CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
 EKS_ROLE_ARN=$(terraform output -raw eks_role_arn)
 REPO_MONITOR_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
+ALB_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
 VPC_ID=$(terraform output -raw vpc_id)
 
 # Building latex file
