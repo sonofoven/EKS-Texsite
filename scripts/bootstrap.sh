@@ -14,8 +14,10 @@ AWS_REGION=$(terraform output -raw aws_region)
 EKS_CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
 EKS_ROLE_ARN=$(terraform output -raw eks_role_arn)
 REPO_MONITOR_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
-ALB_ROLE_ARN=$(terraform output -raw repo_monitor_role_arn)
+ALB_ROLE_ARN=$(terraform output -raw alb_role_arn)
 VPC_ID=$(terraform output -raw vpc_id)
+
+ECR_REGISTRY_ID=$(echo "$ECR_REPOSITORY_URL" | cut -d '/' -f1)
 
 # Building latex file
 echo "\n<< CONVERTING LATEX RESUME TO HTML5 >>\n"
@@ -28,7 +30,7 @@ echo "\n<< BUILDING AND PUSHING IMAGE >>\n"
 cd "$REPO_ROOT/nginx"
 
 # Login to ECR registry
-aws ecr get-login-password --region ${AWS_REGION} \
+aws ecr get-login-password --region $AWS_REGION \
   | docker login \
       --username AWS \
       --password-stdin \
@@ -64,10 +66,10 @@ flux bootstrap github \
   --personal \
   --components-extra=image-reflector-controller,image-automation-controller
 
-# kubectl -n flux-system annotate serviceaccount image-reflector-controller \
-#         eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
-#         --overwrite
-# kubectl -n flux-system rollout restart deployment image-reflector-controller
+kubectl -n flux-system annotate serviceaccount image-reflector-controller \
+        eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
+        --overwrite
+kubectl -n flux-system rollout restart deployment image-reflector-controller
 
 cd "$REPO_ROOT/cluster/apps/nginx/templates"
 

@@ -6,3 +6,4 @@ metadata:
 spec:
   image: 789382030074.dkr.ecr.us-west-1.amazonaws.com/nginx-texsite
   interval: 1m
+  provider: aws

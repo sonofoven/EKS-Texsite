@@ -6,3 +6,16 @@ resources:
 - gotk-sync.yaml
 - infra-kustomization.yml
 - monitoring-kustomization.yml
+patches:
+  - target:
+      kind: ServiceAccount
+      name: image-reflector-controller
+      namespace: flux-system
+    patch: |-
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: image-reflector-controller
+        namespace: flux-system
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::789382030074:role/image-reflector-role
