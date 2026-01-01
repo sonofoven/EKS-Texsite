@@ -87,7 +87,10 @@ envsubst < alb-controller.yml.tmpl > ../alb-controller.yml
 ALB_ROLE_ARN="$ALB_ROLE_ARN" \
 envsubst < alb-service-acc.yml.tmpl > ../alb-service-acc.yml
 
-# Store bootstrap gh variables
+cd "$REPO_ROOT/cluster/flux-system/templates"
+REPO_MONITOR_ROLE_ARN="$REPO_MONITOR_ROLE_ARN" \
+envsubst < kustomization.yml.tmpl > ../kustomization.yml
+
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"
 echo "AWS_REGION=$AWS_REGION"
 echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME"
