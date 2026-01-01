@@ -1,3 +1,4 @@
 resources:
   - alb-helm-repo.yml
   - alb-controller.yml
+  - alb-service-acc.yml
