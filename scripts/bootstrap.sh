@@ -76,6 +76,8 @@ ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
 envsubst < nginx-repo.yml.tmpl > ../nginx-repo.yml
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
 envsubst < nginx-deployment.yml.tmpl > ../nginx-deployment.yml
+EKS_ROLE_ARN="$EKS_ROLE_ARN" \
+envsubst < nginx-image-reflect-sa.yml.tmpl > ../nginx-image-reflect-sa.yml
 
 cd "$REPO_ROOT/cluster/infra/templates"
 EKS_CLUSTER_NAME="$EKS_CLUSTER_NAME" \
