@@ -64,10 +64,10 @@ flux bootstrap github \
   --personal \
   --components-extra=image-reflector-controller,image-automation-controller
 
-kubectl -n flux-system annotate serviceaccount image-reflector-controller \
-        eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
-        --overwrite
-kubectl -n flux-system rollout restart deployment image-reflector-controller
+# kubectl -n flux-system annotate serviceaccount image-reflector-controller \
+#         eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
+#         --overwrite
+# kubectl -n flux-system rollout restart deployment image-reflector-controller
 
 cd "$REPO_ROOT/cluster/apps/nginx/templates"
 
@@ -89,7 +89,7 @@ envsubst < alb-service-acc.yml.tmpl > ../alb-service-acc.yml
 
 cd "$REPO_ROOT/cluster/flux-system/templates"
 REPO_MONITOR_ROLE_ARN="$REPO_MONITOR_ROLE_ARN" \
-envsubst < kustomization.yml.tmpl > ../kustomization.yml
+envsubst < kustomization.yml.tmpl > ../kustomization.yaml
 
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"
 echo "AWS_REGION=$AWS_REGION"
