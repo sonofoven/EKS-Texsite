@@ -6,5 +6,4 @@ resources:
   - nginx-hpa.yml
   - nginx-service.yml
   - nginx-ingress.yml
-  - nginx-image-reflect-sa.yml
 
