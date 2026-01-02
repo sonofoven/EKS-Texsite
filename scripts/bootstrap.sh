@@ -56,6 +56,26 @@ GITHUB_OWNER=$(echo "$GITHUB_INFO" | cut -d '/' -f1)
 GITHUB_REPO=$(echo "$GITHUB_INFO" | cut -d '/' -f2)
 
 
+echo "\n<< INSTALLING FLUX >>\n"
+
+GITHUB_TOKEN=$(gh auth token) \
+flux bootstrap github \
+   --token-auth \
+  --owner=$GITHUB_OWNER \
+  --repository=$GITHUB_REPO \
+  --branch=main \
+  --path=cluster \
+  --personal \
+  --components-extra=image-reflector-controller,image-automation-controller
+
+kubectl -n flux-system annotate serviceaccount image-reflector-controller \
+        eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
+        --overwrite
+kubectl -n flux-system rollout restart deployment image-reflector-controller
+
+
+echo "\n<< UPDATING TEMPLATE MANIFESTS FOR FLUX >>\n"
+
 cd "$REPO_ROOT/cluster/apps/nginx/templates"
 
 # Generate ecr source repository for use with flux image reflector
@@ -85,22 +105,7 @@ git add .
 git commit -m "Bootstrapping"
 git push origin main
 
-echo "\n<< INSTALLING FLUX >>\n"
-
-GITHUB_TOKEN=$(gh auth token) \
-flux bootstrap github \
-   --token-auth \
-  --owner=$GITHUB_OWNER \
-  --repository=$GITHUB_REPO \
-  --branch=main \
-  --path=cluster \
-  --personal \
-  --components-extra=image-reflector-controller,image-automation-controller
-
-kubectl -n flux-system annotate serviceaccount image-reflector-controller \
-        eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
-        --overwrite
-kubectl -n flux-system rollout restart deployment image-reflector-controller
+flux reconcile source git flux-system
 
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"
 echo "AWS_REGION=$AWS_REGION"
