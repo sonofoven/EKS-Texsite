@@ -404,7 +404,7 @@ data "http" "lbc_iam_policy" {
   url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json"
 }
 
-# Make alb policy
+# Make lbc policy
 resource "aws_iam_policy" "lbc_policy" {
   name        = "AWSLoadBalancerControllerIAMPolicy"
   description = "Permissions for EKS Load Balancer Controller"
