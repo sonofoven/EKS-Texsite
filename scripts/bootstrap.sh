@@ -85,12 +85,19 @@ EKS_CLUSTER_NAME="$EKS_CLUSTER_NAME" \
 AWS_REGION="$AWS_REGION" \
 VPC_ID="$VPC_ID" \
 envsubst < alb-controller.yml.tmpl > ../alb-controller.yml
+
 ALB_ROLE_ARN="$ALB_ROLE_ARN" \
 envsubst < alb-service-acc.yml.tmpl > ../alb-service-acc.yml
 
 cd "$REPO_ROOT/cluster/flux-system/templates"
 REPO_MONITOR_ROLE_ARN="$REPO_MONITOR_ROLE_ARN" \
 envsubst < kustomization.yml.tmpl > ../kustomization.yaml
+
+cd "$REPO_ROOT"
+
+git add .
+git commit -m "Bootstrapping"
+git push origin main
 
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"
 echo "AWS_REGION=$AWS_REGION"
