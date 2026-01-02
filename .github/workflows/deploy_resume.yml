@@ -1,0 +1,45 @@
+name: 'Deploys resume to k8s cluster'
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'latex/**'  # only run when code under latex changes
+      - '.github/workflows/deploy_resume.yml' # run when workflow file changes
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build_and_push:
+    name: 'Build and push container image to k8s cluster'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (static keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name:
+        working-directory: ./latex
+        if: github.event_name
+        run: >
+             ./resume2html.sh
+
+      - name: Build & Push Docker Container to ECR
+        working-directory: ./scripts
+        if: github.event_name == 'push'
+        run: > 
+            ./pushImage.sh 
+            "${{ vars.ECR_REPOSITORY }}" 
+            "${{ vars.AWS_REGION }}"
