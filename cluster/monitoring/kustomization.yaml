@@ -3,4 +3,3 @@ resources:
   - kube-prom-stack.yml
   - metrics-helm-repo.yml
   - metrics-server.yml
-  - nginx-svc-monitor.yml
