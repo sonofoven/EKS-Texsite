@@ -50,7 +50,6 @@ cd "$REPO_ROOT"
 echo "\n<< UPDATING KUBECTL TO INTERACT W/ CLUSTER >>\n"
 aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME --role-arn $EKS_ROLE_ARN
 
-echo "\n<< INSTALLING FLUX >>\n"
 
 GITHUB_INFO=$(gh repo view --json owner,name -q '.owner.login + "/" + .name')
 GITHUB_OWNER=$(echo "$GITHUB_INFO" | cut -d '/' -f1)
@@ -87,8 +86,10 @@ git add .
 git commit -m "Bootstrapping"
 git push origin main
 
+echo "\n<< INSTALLING FLUX >>\n"
+
 flux bootstrap github \
-  --token-auth \
+  # --token-auth \
   --owner=$GITHUB_OWNER \
   --repository=$GITHUB_REPO \
   --branch=main \
