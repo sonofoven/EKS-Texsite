@@ -17,7 +17,7 @@ spec:
   values:
     clusterName: TexSiteCluster
     region: us-west-1
-    vpcId: vpc-0506df79a32fb9a0b
+    vpcId: vpc-0f3f587fc327f8c3f
     serviceAccount:
       create: false
       name: aws-load-balancer-controller

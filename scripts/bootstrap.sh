@@ -57,19 +57,6 @@ GITHUB_OWNER=$(echo "$GITHUB_INFO" | cut -d '/' -f1)
 GITHUB_REPO=$(echo "$GITHUB_INFO" | cut -d '/' -f2)
 
 GITHUB_TOKEN=$(gh auth token) \
-flux bootstrap github \
-  --token-auth \
-  --owner=$GITHUB_OWNER \
-  --repository=$GITHUB_REPO \
-  --branch=main \
-  --path=cluster \
-  --personal \
-  --components-extra=image-reflector-controller,image-automation-controller
-
-kubectl -n flux-system annotate serviceaccount image-reflector-controller \
-        eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
-        --overwrite
-kubectl -n flux-system rollout restart deployment image-reflector-controller
 
 cd "$REPO_ROOT/cluster/apps/nginx/templates"
 
@@ -99,6 +86,20 @@ git pull
 git add .
 git commit -m "Bootstrapping"
 git push origin main
+
+flux bootstrap github \
+  --token-auth \
+  --owner=$GITHUB_OWNER \
+  --repository=$GITHUB_REPO \
+  --branch=main \
+  --path=cluster \
+  --personal \
+  --components-extra=image-reflector-controller,image-automation-controller
+
+kubectl -n flux-system annotate serviceaccount image-reflector-controller \
+        eks.amazonaws.com/role-arn=${REPO_MONITOR_ROLE_ARN} \
+        --overwrite
+kubectl -n flux-system rollout restart deployment image-reflector-controller
 
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"
 echo "AWS_REGION=$AWS_REGION"
