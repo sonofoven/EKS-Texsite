@@ -1,0 +1,4 @@
+cluster/apps/nginx/nginx-deployment.yml merge=ours
+cluster/apps/nginx/nginx-repo.yml merge=ours
+cluster/infra/alb-controller.yml merge=ours
+cluster/infra/alb-service-acc.yml merge=ours
