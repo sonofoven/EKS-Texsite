@@ -3,6 +3,8 @@ kind: ServiceMonitor
 metadata:
   name: nginx-texsite
   namespace: monitoring
+  labels:
+    release: monitoring-prometheus
 spec:
   namespaceSelector:
     matchNames:
