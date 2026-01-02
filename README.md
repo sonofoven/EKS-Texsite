@@ -16,6 +16,7 @@ The repo is intentionally minimal: one app (NGINX), one public ingress (AWS ALB)
   - **ImageUpdateAutomation** commits the new image tag back into this repo
   - Flux reconciles the commit and rolls out the new version automatically
 - **Public ingress via AWS Load Balancer Controller** (ALB).
+- **Support for horizontal auto-scaling** (EKS Auto Mode + HPA). your site automatically expands to adapt to increased load/traffic
 
 
 ## Project Structure (high level)
