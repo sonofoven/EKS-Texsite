@@ -95,6 +95,7 @@ envsubst < kustomization.yml.tmpl > ../kustomization.yaml
 
 cd "$REPO_ROOT"
 
+git pull
 git add .
 git commit -m "Bootstrapping"
 git push origin main
