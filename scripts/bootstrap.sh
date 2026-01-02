@@ -79,8 +79,6 @@ envsubst < nginx-repo.yml.tmpl > ../nginx-repo.yml
 
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
 envsubst '${ECR_REPOSITORY_URL}' < nginx-deployment.yml.tmpl > ../nginx-deployment.yml
-# REPO_MONITOR_ROLE_ARN="$REPO_MONITOR_ROLE_ARN" \
-# envsubst < nginx-image-reflect-sa.yml.tmpl > ../nginx-image-reflect-sa.yml
 
 cd "$REPO_ROOT/cluster/infra/templates"
 EKS_CLUSTER_NAME="$EKS_CLUSTER_NAME" \
@@ -96,11 +94,7 @@ envsubst < kustomization.yml.tmpl > ../kustomization.yaml
 
 echo "ECR_REPOSITORY_URL=$ECR_REPOSITORY_URL"
 echo "AWS_REGION=$AWS_REGION"
-echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME"
-echo "EKS_ROLE_ARN=$EKS_ROLE_ARN"
 
 echo "\n<< STORING BOOTSTRAP VARS >>\n"
 gh variable set ECR_REPOSITORY --body "$ECR_REPOSITORY_URL"
 gh variable set AWS_REGION --body "$AWS_REGION"
-gh variable set EKS_CLUSTER_NAME --body "$EKS_CLUSTER_NAME"
-gh variable set EKS_ROLE_ARN --body "$EKS_ROLE_ARN"
