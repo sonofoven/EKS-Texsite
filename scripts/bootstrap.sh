@@ -76,8 +76,9 @@ cd "$REPO_ROOT/cluster/apps/nginx/templates"
 # Generate ecr source repository for use with flux image reflector
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
 envsubst < nginx-repo.yml.tmpl > ../nginx-repo.yml
+
 ECR_REPOSITORY_URL="$ECR_REPOSITORY_URL" \
-envsubst < nginx-deployment.yml.tmpl > ../nginx-deployment.yml
+envsubst '${ECR_REPOSITORY_URL}' < nginx-deployment.yml.tmpl > ../nginx-deployment.yml
 # REPO_MONITOR_ROLE_ARN="$REPO_MONITOR_ROLE_ARN" \
 # envsubst < nginx-image-reflect-sa.yml.tmpl > ../nginx-image-reflect-sa.yml
 

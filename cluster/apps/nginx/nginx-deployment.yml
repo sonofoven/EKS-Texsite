@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: 789382030074.dkr.ecr.us-west-1.amazonaws.com/nginx-texsite:00000000-000000 # {"": "flux-system:nginx-texsite"}
+          image: 789382030074.dkr.ecr.us-west-1.amazonaws.com/nginx-texsite:00000000-000000 # {"$imagepolicy": "flux-system:nginx-texsite"}
           ports:
             - containerPort: 80
             - containerPort: 8080
@@ -26,3 +26,10 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+        - name: nginx-exporter
+          image: nginx/nginx-prometheus-exporter:latest
+          args:
+            - --nginx.scrape-uri=http://127.0.0.1:8080/stub_status
+            - --web.listen-address=:9113
+          ports:
+            - containerPort: 9113
