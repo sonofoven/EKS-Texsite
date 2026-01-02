@@ -15,11 +15,7 @@ spec:
     spec:
       containers:
         - name: nginx
-<<<<<<< HEAD
           image: 789382030074.dkr.ecr.us-west-1.amazonaws.com/nginx-texsite:00000000-000000 # {"$imagepolicy": "flux-system:nginx-texsite"}
-=======
-          image: 789382030074.dkr.ecr.us-west-1.amazonaws.com/nginx-texsite:20260102-045922 # {"$imagepolicy": "flux-system:nginx-texsite"}
->>>>>>> 6b56ac37a1fdbe6c3340d03a04bc99180750a245
           ports:
             - containerPort: 80
             - containerPort: 8080
